@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#f7f2e7" />
+  <meta name="description" content="Demo interactiva de orientación peatonal y servicios de apoyo para la Romería en Cartago." />
+  <title>Romería Segura | Cartago</title>
+
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="preconnect" href="https://tiles.openfreemap.org" />
+  <link href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=0.6.0" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="topbar glass">
+    <div class="brand-wrap">
+      <div class="brand-mark" aria-hidden="true">✦</div>
+      <div>
+        <div class="eyebrow">Cartago · Costa Rica</div>
+        <h1>Romería Segura</h1>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="locateBtn" class="icon-btn primary-soft" type="button" title="Usar mi ubicación">
+        <span aria-hidden="true">⌖</span>
+        <span class="hide-mobile">Mi ubicación</span>
+      </button>
+      <button id="themeToggle" class="icon-btn" type="button" aria-label="Cambiar modo de color" title="Modo oscuro">
+        <span id="themeIcon" aria-hidden="true">☾</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section id="view-map" class="view active" aria-labelledby="mapTitle">
+      <div class="hero-card glass">
+        <div>
+          <div class="eyebrow">Destino principal</div>
+          <h2 id="mapTitle">Basílica de Nuestra Señora de los Ángeles</h2>
+          <p>Orientación peatonal, servicios cercanos y puntos de apoyo durante la Romería.</p>
+        </div>
+        <div class="distance-card" id="distanceCard">
+          <span class="distance-label">Ruta a la Basílica</span>
+          <strong id="basilicaDistance">Activá tu GPS</strong>
+          <small id="distanceNote">Calcularemos distancia y tiempo caminando.</small>
+          <button id="routeBasilicaBtn" class="small-route-btn" type="button" disabled>Ir a la Basílica</button>
+        </div>
+      </div>
+
+      <div class="map-stage glass">
+        <div id="map" role="application" aria-label="Mapa de servicios para la Romería"></div>
+
+        <div class="map-overlay top-left">
+          <div class="status-pill" id="gpsStatus"><span class="pulse-dot"></span> GPS sin activar</div>
+        </div>
+
+        <div class="map-overlay top-right legend-card glass-subtle">
+          <button id="legendToggle" class="legend-toggle" type="button" aria-expanded="false">Leyenda</button>
+          <div id="legendContent" class="legend-content">
+            <span><i class="legend-dot police"></i>Fuerza Pública</span>
+            <span><i class="legend-medical-cross" aria-hidden="true"></i>Cruz Roja</span>
+            <span><i class="legend-dot transit"></i>Tránsito</span>
+            <span><i class="legend-dot restroom"></i>Sanitarios</span>
+            <span><i class="legend-dot hydration"></i>Hidratación</span>
+            <span><i class="legend-dot meeting"></i>Punto de encuentro</span>
+            <span><i class="legend-dot basilica"></i>Basílica</span>
+          </div>
+        </div>
+
+        <div class="map-tools">
+          <button id="fullscreenMapBtn" class="floating-map-btn" type="button" title="Ampliar mapa a pantalla completa" aria-label="Ampliar mapa a pantalla completa">⛶</button>
+          <button id="recenterBtn" class="floating-map-btn" type="button" title="Centrar una vez en mi ubicación" aria-label="Centrar una vez en mi ubicación">◎</button>
+          <button id="followBtn" class="floating-map-btn follow-map-btn" type="button" title="Seguir mi marcha y mirar hacia adelante" aria-label="Seguir mi marcha y mirar hacia adelante">➤</button>
+          <button id="northBtn" class="floating-map-btn" type="button" title="Orientar al norte">N</button>
+        </div>
+
+        <div id="routingBusy" class="routing-busy hidden" aria-live="polite">
+          <span class="spinner"></span> Calculando mejor recorrido peatonal…
+        </div>
+
+        <div class="service-dock glass-subtle">
+          <div class="service-dock-head">
+            <div>
+              <div class="eyebrow">¿Qué necesitás?</div>
+              <h3>Encontrá el punto más cercano caminando</h3>
+            </div>
+            <button id="centerBasilicaBtn" class="mini-link" type="button">Ver Basílica</button>
+          </div>
+
+          <div class="service-chips" id="serviceChips">
+            <button class="service-chip active" data-service="all" type="button"><span>◎</span>Todos</button>
+            <button class="service-chip" data-service="police" type="button"><span>👮</span>Fuerza Pública</button>
+            <button class="service-chip" data-service="redcross" type="button"><span class="chip-medical-cross" aria-hidden="true"></span>Cruz Roja</button>
+            <button class="service-chip" data-service="transit" type="button"><span>🚗</span>Tránsito</button>
+            <button class="service-chip" data-service="restroom" type="button"><span>🚻</span>Sanitarios</button>
+            <button class="service-chip" data-service="hydration" type="button"><span>💧</span>Hidratación</button>
+            <button class="service-chip" data-service="meeting" type="button"><span>⚑</span>Punto de encuentro</button>
+          </div>
+
+          <div id="nearestResult" class="nearest-result" aria-live="polite">
+            <div class="nearest-icon">⌖</div>
+            <div class="nearest-copy">
+              <strong>Activá tu ubicación</strong>
+              <p>Así podremos buscar el servicio seleccionado más cercano por recorrido peatonal.</p>
+            </div>
+          </div>
+        </div>
+
+        <section id="navigationPanel" class="navigation-panel hidden" aria-live="polite">
+          <div class="nav-topline">
+            <div class="nav-turn-icon" id="navTurnIcon">↑</div>
+            <div class="nav-instruction">
+              <small>Siguiente indicación</small>
+              <strong id="navInstruction">Continúe por la ruta</strong>
+              <span id="navStepDistance"></span>
+            </div>
+            <div class="nav-window-actions">
+              <button id="compactNavigationBtn" class="nav-compact-toggle" type="button" aria-label="Contraer indicaciones" title="Contraer indicaciones">⌃</button>
+              <button id="closeNavigationBtn" class="nav-close" type="button" aria-label="Cerrar navegación">×</button>
+            </div>
+          </div>
+          <div class="nav-progress">
+            <div>
+              <strong id="navRemainingDistance">—</strong>
+              <small>restantes</small>
+            </div>
+            <div>
+              <strong id="navRemainingTime">—</strong>
+              <small>caminando</small>
+            </div>
+            <div class="nav-destination">
+              <strong id="navDestination">Destino</strong>
+              <small id="navEta">—</small>
+            </div>
+          </div>
+          <div class="nav-actions">
+            <button id="voiceBtn" class="nav-action active" type="button">🔊 Voz</button>
+            <button id="overviewRouteBtn" class="nav-action" type="button">▱ Ver ruta</button>
+            <button id="stopNavigationBtn" class="nav-action danger" type="button">■ Finalizar</button>
+          </div>
+        </section>
+      </div>
+
+      <div class="map-footnote">
+        <span>Área demostrativa: radio aproximado de 40 km desde la Basílica.</span>
+        <span>Las rutas se calculan con datos de OpenStreetMap. Los puestos actuales son <strong>datos de demostración</strong>, no ubicaciones oficiales.</span>
+      </div>
+      <div class="project-credit">Proyecto elaborado por la <strong>Dirección de Programas Policiales Preventivos</strong>.</div>
+    </section>
+
+    <section id="view-reports" class="view" aria-labelledby="reportsTitle">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Ayuda comunitaria</div>
+          <h2 id="reportsTitle">Personas y objetos reportados</h2>
+          <p>Consultá reportes de demostración y visualizá el punto donde fueron registrados.</p>
+        </div>
+        <div class="warning-chip">⚠ No sustituye el 9-1-1</div>
+      </div>
+
+      <div class="notice-card glass">
+        <div class="notice-icon">!</div>
+        <div>
+          <strong>Emergencias, delitos o situaciones de riesgo</strong>
+          <p>Esta aplicación es un apoyo informativo. Ante una emergencia, delito, robo o situación que comprometa la seguridad o la salud, utilizá los canales oficiales y llamá al <strong>9-1-1</strong>.</p>
+        </div>
+      </div>
+
+      <div class="report-tabs" role="tablist">
+        <button class="report-tab active" data-report-filter="all" type="button">Todos</button>
+        <button class="report-tab" data-report-filter="person" type="button">Personas</button>
+        <button class="report-tab" data-report-filter="object" type="button">Objetos</button>
+        <button class="report-tab" data-report-filter="medical" type="button">Traslados médicos</button>
+      </div>
+
+      <div id="reportGrid" class="report-grid"></div>
+    </section>
+
+    <section id="view-help" class="view" aria-labelledby="helpTitle">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">Información útil</div>
+          <h2 id="helpTitle">Cómo usar Romería Segura</h2>
+          <p>La versión 0.6 incorpora una experiencia móvil ampliada y marcadores anclados visualmente al mapa.</p>
+        </div>
+      </div>
+
+      <div class="help-grid">
+        <article class="help-card glass">
+          <div class="help-number">01</div>
+          <h3>Activá tu GPS</h3>
+          <p>Permití la ubicación. La app usa tu posición para calcular rutas caminando sobre la red de calles y senderos disponible.</p>
+        </article>
+        <article class="help-card glass">
+          <div class="help-number">02</div>
+          <h3>Elegí el servicio</h3>
+          <p>Seleccioná Fuerza Pública, Cruz Roja, Tránsito, sanitarios, hidratación o puntos de encuentro. La app compara recorridos peatonales y prioriza el más conveniente.</p>
+        </article>
+        <article class="help-card glass">
+          <div class="help-number">03</div>
+          <h3>Iniciá navegación</h3>
+          <p>Al pulsar “Ir ahora”, el mapa se inclina, sigue tu GPS y actualiza distancia, tiempo e instrucciones conforme avanzás.</p>
+        </article>
+        <article class="help-card glass">
+          <div class="help-number">04</div>
+          <h3>Usá canales oficiales</h3>
+          <p>La app complementa la orientación del romero. Para emergencias, delitos o riesgo inmediato, llamá siempre al 9-1-1.</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav glass" aria-label="Navegación principal">
+    <button class="nav-item active" data-view="map" type="button"><span>⌖</span><small>Mapa</small></button>
+    <button class="nav-item" data-view="reports" type="button"><span>◈</span><small>Reportes</small></button>
+    <button class="nav-item" data-view="help" type="button"><span>?</span><small>Ayuda</small></button>
+  </nav>
+
+  <button id="adminLink" class="admin-link" type="button">Administración</button>
+
+  <div id="adminModal" class="modal-backdrop" aria-hidden="true">
+    <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+      <button id="closeAdminBtn" class="modal-close" type="button" aria-label="Cerrar">×</button>
+
+      <div id="adminLoginView">
+        <div class="modal-brand">✦</div>
+        <div class="eyebrow">Acceso institucional · demo</div>
+        <h2 id="adminTitle">Panel administrativo</h2>
+        <p class="modal-lead">Ingreso de demostración para personal autorizado de Fuerza Pública, Tránsito y Cruz Roja.</p>
+
+        <label class="field-label" for="adminCode">Código de acceso de demostración</label>
+        <div class="input-wrap">
+          <input id="adminCode" type="password" autocomplete="off" placeholder="Ingresá el código" />
+          <button id="adminLoginBtn" class="gold-btn" type="button">Ingresar</button>
+        </div>
+        <p id="adminLoginMessage" class="form-message">Para esta versión de muestra: <strong>DEMO2026</strong>.</p>
+        <div class="security-note">En GitHub Pages no existe seguridad real de contraseña porque el código es público. La autenticación definitiva se implementará con backend.</div>
+      </div>
+
+      <div id="adminWorkspace" class="admin-workspace hidden">
+        <div class="admin-heading">
+          <div>
+            <div class="eyebrow">Consola institucional · demo</div>
+            <h2>Registrar novedad</h2>
+          </div>
+          <button id="adminLogoutBtn" class="mini-link" type="button">Cerrar sesión</button>
+        </div>
+
+        <div class="admin-type-grid" id="adminTypeGrid">
+          <button class="admin-type active" data-admin-type="object" type="button"><span>🎒</span><strong>Objeto encontrado</strong><small>Custodia y eventual entrega</small></button>
+          <button class="admin-type" data-admin-type="person" type="button"><span>🧍</span><strong>Persona extraviada</strong><small>Ubicación y hora</small></button>
+          <button class="admin-type" data-admin-type="medical" type="button"><span>✚</span><strong>Atención / traslado</strong><small>Registro básico</small></button>
+        </div>
+
+        <form id="adminForm" class="admin-form">
+          <div class="form-grid">
+            <label><span>Institución</span><select id="adminInstitution" required><option>Fuerza Pública</option><option>Cruz Roja</option><option>Tránsito</option></select></label>
+            <label><span>Puesto / punto</span><select id="adminStation" required></select></label>
+            <label><span>Hora</span><input id="adminTime" type="time" required /></label>
+            <label><span>Estado</span><input id="adminState" type="text" placeholder="Ej. En custodia" required /></label>
+          </div>
+
+          <label><span>Título público</span><input id="adminTitleInput" type="text" placeholder="Ej. Bolso pequeño encontrado" required /></label>
+          <label><span>Descripción pública</span><textarea id="adminSummary" rows="3" placeholder="No incluya datos sensibles en esta demostración." required></textarea></label>
+          <label><span>Información reservada / verificación</span><textarea id="adminPrivate" rows="2" placeholder="En producción esto sería visible solo para personal autorizado."></textarea></label>
+
+          <div class="form-grid">
+            <label><span>Evidencia fotográfica (demo local)</span><input id="adminPhoto" type="file" accept="image/*" /></label>
+            <div id="photoPreview" class="photo-preview"><span>Sin fotografía seleccionada</span></div>
+          </div>
+
+          <button class="gold-btn wide" type="submit">Agregar reporte a la demostración</button>
+        </form>
+
+        <div class="handover-demo">
+          <div>
+            <div class="eyebrow">Demostración de retiro</div>
+            <h3>Entrega de objeto encontrado</h3>
+            <p>La versión productiva deberá manejar identificación y evidencia en un backend seguro, nunca como archivos públicos en GitHub.</p>
+          </div>
+          <div class="handover-grid">
+            <label><span>Identificación · frente</span><input id="idFront" type="file" accept="image/*" /></label>
+            <label><span>Identificación · reverso</span><input id="idBack" type="file" accept="image/*" /></label>
+            <button id="simulateHandoverBtn" class="outline-btn" type="button">Simular entrega</button>
+          </div>
+          <p id="handoverStatus" class="form-message"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
+  <script src="data.js?v=0.6.0"></script>
+  <script src="app.js?v=0.6.0"></script>
+</body>
+</html>
