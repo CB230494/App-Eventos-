@@ -1,0 +1,33 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function esAdministrador() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    match /admins/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list, create, update, delete: if false;
+    }
+    match /reportes/{id} {
+      allow get, list: if resource.data.published == true || esAdministrador();
+      allow create: if esAdministrador()
+        && request.resource.data.published == true
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.category in ['object', 'person', 'medical']
+        && request.resource.data.title is string
+        && request.resource.data.summary is string
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.summary.size() <= 900;
+      allow update, delete: if esAdministrador();
+    }
+    match /reportes_privados/{id} {
+      allow read: if esAdministrador();
+      allow create: if esAdministrador()
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update, delete: if esAdministrador();
+    }
+    // Futuras colecciones de puntos/eventos: no habilitar hasta implementar permisos.
+    match /{document=**} { allow read, write: if false; }
+  }
+}

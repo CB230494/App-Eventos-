@@ -1,0 +1,56 @@
+ROMERÍA SEGURA — FIREBASE + GITHUB PAGES
+=======================================
+Proyecto Firebase configurado: romeria-segura
+Repositorio: https://github.com/CB230494/App-Eventos-
+Sitio esperado: https://cb230494.github.io/App-Eventos-/
+
+ESTA ENTREGA YA INCLUYE firebase-config.js CON LA CONFIGURACIÓN WEB PUBLICA.
+NO debés copiar contraseñas de administrador ni claves privadas a GitHub.
+
+PASO 1 — FIRESTORE (IMPORTANTE)
+Firestore > Reglas: reemplazá las reglas actuales por el contenido de
+firestore.rules y pulsá PUBLICAR.
+La aplicación usa estas colecciones:
+  admins            : documento ID = UID creado en Authentication, campo rol="admin"
+  reportes          : novedades visibles si published=true
+  reportes_privados : notas internas para administradores
+No es necesario crear reportes manualmente: se crean desde el panel admin.
+
+PASO 2 — GITHUB
+Descomprimí el ZIP. Subí TODOS los archivos de esta carpeta (sueltos,
+no la carpeta que los contiene) a la RAÍZ del repositorio App-Eventos-.
+Elegí Add file > Upload files > Commit changes en GitHub.
+El archivo index.html debe quedar en la raíz del repositorio.
+
+PASO 3 — PUBLICAR
+GitHub > App-Eventos- > Settings > Pages.
+Source: Deploy from a branch / main / (root) y Guardar.
+Abrí https://cb230494.github.io/App-Eventos-/
+Puede ser necesario recargar sin caché (Ctrl+F5).
+
+PASO 4 — PROBAR
+Abrí el panel administrativo de Romería Segura e ingresá con EL CORREO
+Y LA CONTRASEÑA que creaste en Firebase Authentication.
+Creá una novedad de prueba sin datos personales.
+Abrí el sitio en otra ventana de incógnito y verificá que se vea.
+Si aparece "permission-denied", revisá las reglas y el UID de admins.
+
+QUÉ SE CONSERVA
+Mapas MapLibre, GPS, búsqueda de servicios, rutas peatonales, navegación
+por voz, filtros y modos claro/oscuro. Los puntos del mapa todavía se
+alimentan de data.js; los reportes nuevos se guardan en Firestore.
+
+LÍMITES ACTUALES
+- Las fotos son solo vista previa local, NO se guardan en la nube.
+- La simulación de entrega de objetos no guarda documentos de identidad.
+- No hay formulario público para subir reportes de asistentes.
+- No se han realizado pruebas de escritura/lectura contra tu Firebase real.
+- Los puntos y puestos deben verificarse antes de un evento real.
+- No publicar datos sensibles ni información médica/personas identificables.
+- Para uso en evento masivo, validar capacidad, seguridad y disponibilidad.
+
+SI FALLA
+1. Abrí F12 > Console y copiá el error (sin contraseñas).
+2. Revisá que las reglas guardadas sean las de firestore.rules.
+3. Verificá el documento admins/{UID} y correo/contraseña en Authentication.
+4. Comprobá que cb230494.github.io esté en dominios autorizados (ya lo agregaste).
